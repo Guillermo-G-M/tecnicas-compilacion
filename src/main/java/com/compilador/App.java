@@ -7,6 +7,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import com.compilador.gramatica.CompiladorLexer;
 import com.compilador.gramatica.CompiladorParser;
+import com.compilador.analizador.lexico.TablaTokens;
+import com.compilador.analizador.sintactico.VisualizadorAST;
 
 /**
  * Aplicación principal del compilador C++
@@ -15,10 +17,10 @@ import com.compilador.gramatica.CompiladorParser;
 public class App {
 
     public static void main(String[] args) {
-        System.out.println("==============================================");
+        System.out.println("══════════════════════════════════════════════");
         System.out.println("  Compilador C++ - Técnicas de Compilación");
         System.out.println("  Trabajo Final 2025");
-        System.out.println("==============================================");
+        System.out.println("══════════════════════════════════════════════");
         System.out.println();
 
         if (args.length == 0) {
@@ -28,36 +30,56 @@ public class App {
         }
 
         String archivoEntrada = args[0];
-        System.out.println("Compilando archivo: " + archivoEntrada);
+        System.out.println("📁 Archivo: " + archivoEntrada);
         System.out.println();
 
         try {
-            // Crear CharStream desde archivo
+            // ===== FASE 1: ANÁLISIS LÉXICO =====
+            System.out.println("═══ 1. ANÁLISIS LÉXICO ═══");
+
             CharStream input = CharStreams.fromFileName(archivoEntrada);
-
-            // Crear lexer
             CompiladorLexer lexer = new CompiladorLexer(input);
-
-            // Crear stream de tokens
             CommonTokenStream tokens = new CommonTokenStream(lexer);
+            tokens.fill();
 
-            // Crear parser
-            CompiladorParser parser = new CompiladorParser(tokens);
+            // Mostrar tabla de tokens
+            TablaTokens tablaTokens = new TablaTokens(tokens.getTokens(), lexer.getVocabulary());
+            tablaTokens.imprimir();
 
-            // Parsear el programa
-            ParseTree tree = parser.programa();
-
-            // Imprimir árbol sintáctico
-            System.out.println("=== ANÁLISIS SINTÁCTICO EXITOSO ===");
-            System.out.println("Árbol sintáctico generado:");
-            System.out.println(tree.toStringTree(parser));
+            System.out.println("✅ Análisis léxico completado");
+            System.out.println("   📊 Tokens procesados: " + tablaTokens.getCantidad());
             System.out.println();
 
-            System.out.println("✓ Compilación completada sin errores sintácticos");
+            // ===== FASE 2: ANÁLISIS SINTÁCTICO =====
+            System.out.println("═══ 2. ANÁLISIS SINTÁCTICO ═══");
+
+            // Resetear tokens para el parser
+            tokens.seek(0);
+            CompiladorParser parser = new CompiladorParser(tokens);
+
+            // Parsear programa
+            ParseTree tree = parser.programa();
+
+            // Visualizar AST
+            VisualizadorAST visualizador = new VisualizadorAST(tree, parser);
+            visualizador.imprimirArbolLisp();
+
+            System.out.println("✅ Análisis sintáctico completado");
+            System.out.println("   📊 Nodos en AST: " + visualizador.contarNodos());
+            System.out.println();
+
+            // ===== RESUMEN =====
+            System.out.println("═══ RESUMEN DE COMPILACIÓN ═══");
+            System.out.println("📁 Archivo procesado: " + archivoEntrada);
+            System.out.println("🔤 Tokens analizados: " + tablaTokens.getCantidad());
+            System.out.println("🌳 Nodos en AST: " + visualizador.contarNodos());
+            System.out.println();
+            System.out.println("🎉 ¡COMPILACIÓN EXITOSA!");
 
         } catch (Exception e) {
-            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("❌ ERROR: " + e.getMessage());
             e.printStackTrace();
         }
     }
 }
+
