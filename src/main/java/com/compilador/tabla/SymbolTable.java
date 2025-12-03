@@ -132,6 +132,22 @@ public class SymbolTable {
     }
 
     /**
+     * Obtiene variables no usadas en el contexto actual
+     */
+    public List<Variable> obtenerVariablesNoUsadasEnContextoActual() {
+        List<Variable> noUsadas = new ArrayList<>();
+        if (!contextos.isEmpty()) {
+            Map<String, Id> contextoActual = contextos.get(contextos.size() - 1);
+            for (Id simbolo : contextoActual.values()) {
+                if (simbolo instanceof Variable && !simbolo.isUsada()) {
+                    noUsadas.add((Variable) simbolo);
+                }
+            }
+        }
+        return noUsadas;
+    }
+
+    /**
      * Obtiene todas las variables no inicializadas
      */
     public List<Variable> obtenerVariablesNoInicializadas() {
