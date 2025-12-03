@@ -59,6 +59,7 @@ DOUBLE : 'double';
 FLOAT : 'float';
 VOID: 'void';
 BOOL: 'bool';
+STRING: 'string';
 
 // Literales booleanos
 TRUE: 'true';
@@ -183,6 +184,7 @@ tipodato : INT
          | CHAR
          | VOID
          | BOOL
+         | STRING
          ;
 
 inicializacion : EQ expresion
