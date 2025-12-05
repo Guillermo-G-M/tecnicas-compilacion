@@ -14,6 +14,7 @@ import com.compilador.analizador.semantico.AnalizadorSemantico;
 import com.compilador.analizador.semantico.ReporteErrores;
 import com.compilador.analizador.ErrorListener;
 import com.compilador.tabla.SymbolTable;
+import com.compilador.generador.GeneradorCodigoIntermedio;
 
 /**
  * Aplicación principal del compilador C++
@@ -106,6 +107,7 @@ public class App {
             // ===== FASE 3: ANÁLISIS SEMÁNTICO =====
             SymbolTable tablaSimbolos = null;
             ReporteErrores reporte = null;
+            GeneradorCodigoIntermedio generador = null;
 
             if (!hayErroresLexSin) {
                 System.out.println("═══ 3. ANÁLISIS SEMÁNTICO ═══");
@@ -136,6 +138,21 @@ public class App {
                 reporte.imprimir();
 
                 System.out.println();
+
+                // ===== FASE 4: GENERACIÓN DE CÓDIGO INTERMEDIO =====
+                if (reporte.getCantidadErrores() == 0) {
+                    System.out.println("═══ 4. GENERACIÓN DE CÓDIGO INTERMEDIO ═══");
+
+                    generador = new GeneradorCodigoIntermedio();
+                    generador.visit(tree);
+                    generador.imprimir();
+
+                    System.out.println("✅ Código intermedio generado");
+                    System.out.println();
+                } else {
+                    System.out.println("⚠️  Generación de código omitida debido a errores semánticos");
+                    System.out.println();
+                }
             } else {
                 System.out.println("⚠️  Análisis semántico omitido debido a errores anteriores");
                 System.out.println();
@@ -159,6 +176,10 @@ public class App {
             if (reporte != null) {
                 totalErrores += reporte.getCantidadErrores();
                 totalWarnings = reporte.getCantidadWarnings();
+            }
+
+            if (generador != null) {
+                System.out.println("📝 Instrucciones generadas: " + generador.getInstrucciones().size());
             }
 
             System.out.println("📊 Errores: " + totalErrores);
