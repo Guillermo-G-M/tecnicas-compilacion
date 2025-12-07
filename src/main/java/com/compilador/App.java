@@ -15,6 +15,7 @@ import com.compilador.analizador.semantico.ReporteErrores;
 import com.compilador.analizador.ErrorListener;
 import com.compilador.tabla.SymbolTable;
 import com.compilador.generador.GeneradorCodigoIntermedio;
+import com.compilador.optimizador.Optimizador;
 
 /**
  * Aplicación principal del compilador C++
@@ -108,6 +109,7 @@ public class App {
             SymbolTable tablaSimbolos = null;
             ReporteErrores reporte = null;
             GeneradorCodigoIntermedio generador = null;
+            Optimizador optimizador = null;
 
             if (!hayErroresLexSin) {
                 System.out.println("═══ 3. ANÁLISIS SEMÁNTICO ═══");
@@ -149,6 +151,16 @@ public class App {
 
                     System.out.println("✅ Código intermedio generado");
                     System.out.println();
+
+                    // ===== FASE 5: OPTIMIZACIÓN DE CÓDIGO =====
+                    System.out.println("═══ 5. OPTIMIZACIÓN DE CÓDIGO ═══");
+
+                    optimizador = new Optimizador(generador.getInstrucciones());
+                    optimizador.optimizar();
+                    optimizador.imprimir();
+
+                    System.out.println("✅ Código optimizado");
+                    System.out.println();
                 } else {
                     System.out.println("⚠️  Generación de código omitida debido a errores semánticos");
                     System.out.println();
@@ -180,6 +192,11 @@ public class App {
 
             if (generador != null) {
                 System.out.println("📝 Instrucciones generadas: " + generador.getInstrucciones().size());
+            }
+
+            if (optimizador != null) {
+                System.out.println("⚡ Instrucciones optimizadas: " + optimizador.getCantidadOptimizadas());
+                System.out.printf("⚡ Reducción: %.2f%%\n", optimizador.getPorcentajeReduccion());
             }
 
             System.out.println("📊 Errores: " + totalErrores);
