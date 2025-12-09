@@ -3,6 +3,9 @@ package com.compilador.generador;
 import com.compilador.gramatica.CompiladorBaseVisitor;
 import com.compilador.gramatica.CompiladorParser;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -573,5 +576,20 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
         System.out.println();
         System.out.println("Total instrucciones: " + instrucciones.size());
         System.out.println();
+    }
+
+    /**
+     * Guarda el código intermedio en un archivo
+     */
+    public void guardarArchivo(String rutaArchivo) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            writer.println("=== CÓDIGO INTERMEDIO (TRES DIRECCIONES) ===");
+            writer.println();
+            for (int i = 0; i < instrucciones.size(); i++) {
+                writer.printf("%3d: %s\n", i, instrucciones.get(i));
+            }
+            writer.println();
+            writer.println("Total instrucciones: " + instrucciones.size());
+        }
     }
 }

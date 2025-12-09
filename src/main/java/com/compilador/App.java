@@ -6,6 +6,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.io.File;
+
 import com.compilador.gramatica.CompiladorLexer;
 import com.compilador.gramatica.CompiladorParser;
 import com.compilador.analizador.lexico.TablaTokens;
@@ -149,6 +151,20 @@ public class App {
                     generador.visit(tree);
                     generador.imprimir();
 
+                    // Crear directorio output si no existe
+                    File outputDir = new File("output");
+                    if (!outputDir.exists()) {
+                        outputDir.mkdirs();
+                    }
+
+                    // Guardar código intermedio en archivo
+                    try {
+                        generador.guardarArchivo("output/codigo_intermedio.txt");
+                        System.out.println("📄 Código intermedio guardado en: output/codigo_intermedio.txt");
+                    } catch (Exception e) {
+                        System.err.println("⚠️  Error al guardar código intermedio: " + e.getMessage());
+                    }
+
                     System.out.println("✅ Código intermedio generado");
                     System.out.println();
 
@@ -158,6 +174,14 @@ public class App {
                     optimizador = new Optimizador(generador.getInstrucciones());
                     optimizador.optimizar();
                     optimizador.imprimir();
+
+                    // Guardar código optimizado en archivo
+                    try {
+                        optimizador.guardarArchivo("output/codigo_optimizado.txt");
+                        System.out.println("📄 Código optimizado guardado en: output/codigo_optimizado.txt");
+                    } catch (Exception e) {
+                        System.err.println("⚠️  Error al guardar código optimizado: " + e.getMessage());
+                    }
 
                     System.out.println("✅ Código optimizado");
                     System.out.println();

@@ -1,5 +1,8 @@
 package com.compilador.optimizador;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -342,5 +345,27 @@ public class Optimizador {
         System.out.println("Constantes propagadas:        " + getCantidadConstantesPropagadas());
         System.out.printf("Reducción:                    %.2f%%\n", getPorcentajeReduccion());
         System.out.println();
+    }
+
+    /**
+     * Guarda el código optimizado en un archivo
+     */
+    public void guardarArchivo(String rutaArchivo) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            writer.println("=== CÓDIGO OPTIMIZADO (TRES DIRECCIONES) ===");
+            writer.println();
+            for (int i = 0; i < instruccionesOptimizadas.size(); i++) {
+                writer.printf("%3d: %s\n", i, instruccionesOptimizadas.get(i));
+            }
+            writer.println();
+            writer.println("Total instrucciones: " + instruccionesOptimizadas.size());
+            writer.println();
+            writer.println("=== MÉTRICAS DE OPTIMIZACIÓN ===");
+            writer.println("Instrucciones originales:     " + getCantidadOriginales());
+            writer.println("Instrucciones optimizadas:    " + getCantidadOptimizadas());
+            writer.println("Instrucciones eliminadas:     " + getInstruccionesEliminadas());
+            writer.println("Constantes propagadas:        " + getCantidadConstantesPropagadas());
+            writer.printf("Reducción:                    %.2f%%\n", getPorcentajeReduccion());
+        }
     }
 }
