@@ -46,26 +46,28 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
 
     // ========== GESTION DE AMBITOS ==========
 
-    @Override
-    public void enterBloque(CompiladorParser.BloqueContext ctx) {
-        contadorContextos++;
-        String nombreContexto = "bloque_" + contadorContextos;
-        tablaSimbolos.agregarContexto(nombreContexto);
-        contextoActual = nombreContexto;
-    }
+    // NOTA: Los bloques internos NO crean sub-contextos
+    // Solo existen contextos: global y de funciones
+    // @Override
+    // public void enterBloque(CompiladorParser.BloqueContext ctx) {
+    //     contadorContextos++;
+    //     String nombreContexto = "bloque_" + contadorContextos;
+    //     tablaSimbolos.agregarContexto(nombreContexto);
+    //     contextoActual = nombreContexto;
+    // }
 
-    @Override
-    public void exitBloque(CompiladorParser.BloqueContext ctx) {
-        // Validar variables no usadas ANTES de eliminar contexto
-        validarVariablesNoUsadasEnContextoActual();
+    // @Override
+    // public void exitBloque(CompiladorParser.BloqueContext ctx) {
+    //     // Validar variables no usadas ANTES de eliminar contexto
+    //     validarVariablesNoUsadasEnContextoActual();
 
-        tablaSimbolos.eliminarContexto();
-        // Restaurar contexto anterior (simplificado)
-        if (tablaSimbolos.getCantidadContextos() > 0) {
-            List<String> nombres = tablaSimbolos.getNombresContextos();
-            contextoActual = nombres.get(nombres.size() - 1);
-        }
-    }
+    //     tablaSimbolos.eliminarContexto();
+    //     // Restaurar contexto anterior (simplificado)
+    //     if (tablaSimbolos.getCantidadContextos() > 0) {
+    //         List<String> nombres = tablaSimbolos.getNombresContextos();
+    //         contextoActual = nombres.get(nombres.size() - 1);
+    //     }
+    // }
 
     // ========== DECLARACIONES ==========
 
@@ -142,8 +144,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
     public void enterDec_f_blk(CompiladorParser.Dec_f_blkContext ctx) {
         // Crear contexto para la función antes de entrar al bloque
         if (funcionActual != null) {
-            contadorContextos++;
-            String nombreContexto = "funcion_" + funcionActual.getNombre();
+            String nombreContexto = funcionActual.getNombre();
             tablaSimbolos.agregarContexto(nombreContexto);
             contextoActual = nombreContexto;
 
@@ -180,6 +181,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
             String nombreParam = paramsCtx.ID().getText();
             Variable param = new Variable(nombreParam, tipoParam, linea, columna, funcion.getNombre());
             param.setInicializada(true);
+            param.setParametro(true); // Marcar como parámetro
             funcion.agregarParametro(param);
 
             // Procesar resto de parámetros recursivamente
@@ -197,6 +199,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
             String nombreParam = listaCtx.ID().getText();
             Variable param = new Variable(nombreParam, tipoParam, linea, columna, funcion.getNombre());
             param.setInicializada(true);
+            param.setParametro(true); // Marcar como parámetro
             funcion.agregarParametro(param);
 
             if (listaCtx.listaparams_f() != null) {

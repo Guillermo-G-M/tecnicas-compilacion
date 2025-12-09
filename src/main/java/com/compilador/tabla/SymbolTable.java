@@ -14,9 +14,26 @@ public class SymbolTable {
     private List<Map<String, Id>> contextos;
     private List<String> nombresContextos;
 
+    // Lista para preservar TODOS los símbolos agregados (para impresión)
+    private List<RegistroSimbolo> todosLosSimbolos;
+
     private SymbolTable() {
         this.contextos = new ArrayList<>();
         this.nombresContextos = new ArrayList<>();
+        this.todosLosSimbolos = new ArrayList<>();
+    }
+
+    /**
+     * Clase interna para almacenar símbolo con su contexto
+     */
+    private static class RegistroSimbolo {
+        Id simbolo;
+        String contexto;
+
+        RegistroSimbolo(Id simbolo, String contexto) {
+            this.simbolo = simbolo;
+            this.contexto = contexto;
+        }
     }
 
     public static SymbolTable getInstance() {
@@ -65,6 +82,10 @@ public class SymbolTable {
         if (!contextos.isEmpty()) {
             Map<String, Id> contextoActual = contextos.get(contextos.size() - 1);
             contextoActual.put(nombre, simbolo);
+
+            // Preservar para impresión
+            String nombreContexto = nombresContextos.get(nombresContextos.size() - 1);
+            todosLosSimbolos.add(new RegistroSimbolo(simbolo, nombreContexto));
         }
     }
 
@@ -75,6 +96,10 @@ public class SymbolTable {
         if (contextoPos >= 0 && contextoPos < contextos.size()) {
             Map<String, Id> contexto = contextos.get(contextoPos);
             contexto.put(nombre, simbolo);
+
+            // Preservar para impresión
+            String nombreContexto = nombresContextos.get(contextoPos);
+            todosLosSimbolos.add(new RegistroSimbolo(simbolo, nombreContexto));
         }
     }
 
@@ -169,33 +194,59 @@ public class SymbolTable {
         System.out.println("=== TABLA DE SÍMBOLOS ===");
         System.out.println();
 
-        if (contextos.isEmpty()) {
+        if (todosLosSimbolos.isEmpty()) {
             System.out.println("(vacía)");
             return;
         }
 
-        System.out.printf("%-15s %-15s %-10s %-12s %-8s %-8s %-8s%n",
-                         "CONTEXTO", "NOMBRE", "TIPO", "CATEGORÍA", "INIT", "USADO", "POS");
-        System.out.println("─".repeat(85));
+        System.out.printf("%-18s %-10s %-12s %-8s %-10s %-15s %-20s%n",
+                         "NOMBRE", "TIPO", "CATEGORÍA", "LÍNEA", "COLUMNA", "ÁMBITO", "DETALLES");
+        System.out.println("─".repeat(100));
 
-        for (int i = 0; i < contextos.size(); i++) {
-            String nombreContexto = nombresContextos.get(i);
-            Map<String, Id> contexto = contextos.get(i);
+        for (RegistroSimbolo registro : todosLosSimbolos) {
+            Id simbolo = registro.simbolo;
+            String ambito = registro.contexto;
 
-            for (Map.Entry<String, Id> entry : contexto.entrySet()) {
-                Id simbolo = entry.getValue();
-                String categoria = simbolo instanceof Variable ? "Variable" : "Función";
-                String posicion = simbolo.getLinea() + ":" + simbolo.getColumna();
+            String categoria;
+            String detalles = "[private]";
 
-                System.out.printf("%-15s %-15s %-10s %-12s %-8s %-8s %-8s%n",
-                                 nombreContexto,
-                                 simbolo.getNombre(),
-                                 simbolo.getTipoDato(),
-                                 categoria,
-                                 simbolo.isInicializada() ? "Sí" : "No",
-                                 simbolo.isUsada() ? "Sí" : "No",
-                                 posicion);
+            if (simbolo instanceof Variable) {
+                Variable var = (Variable) simbolo;
+                categoria = var.isParametro() ? "parametro" : "variable";
+
+                // Agregar detalles de array
+                if (var.isEsArray()) {
+                    detalles = "[arr:" + var.getsizeArray() + "] [private]";
+                }
+            } else if (simbolo instanceof Function) {
+                categoria = "funcion";
+                Function func = (Function) simbolo;
+
+                // Agregar lista de parámetros
+                StringBuilder paramsList = new StringBuilder("[private]");
+                if (!func.getParametros().isEmpty()) {
+                    paramsList.append(" [");
+                    for (int i = 0; i < func.getParametros().size(); i++) {
+                        paramsList.append(func.getParametros().get(i).getTipoDato());
+                        if (i < func.getParametros().size() - 1) {
+                            paramsList.append(", ");
+                        }
+                    }
+                    paramsList.append("]");
+                }
+                detalles = paramsList.toString();
+            } else {
+                categoria = "desconocido";
             }
+
+            System.out.printf("%-18s %-10s %-12s %-8d %-10d %-15s %-20s%n",
+                             simbolo.getNombre(),
+                             simbolo.getTipoDato(),
+                             categoria,
+                             simbolo.getLinea(),
+                             simbolo.getColumna(),
+                             ambito,
+                             detalles);
         }
 
         System.out.println();
