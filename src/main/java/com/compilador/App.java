@@ -18,6 +18,7 @@ import com.compilador.analizador.ErrorListener;
 import com.compilador.tabla.SymbolTable;
 import com.compilador.generador.GeneradorCodigoIntermedio;
 import com.compilador.optimizador.Optimizador;
+import com.compilador.visualizador.VisualizadorGrafico;
 
 /**
  * Aplicación principal del compilador C++
@@ -104,17 +105,32 @@ public class App {
             }
             System.out.println();
 
+            // Visualización gráfica del AST
+            System.out.println("=== 3. VISUALIZACIÓN DEL AST ===");
+            try {
+                VisualizadorGrafico visualizadorGrafico = new VisualizadorGrafico(parser, tree);
+                visualizadorGrafico.mostrarVentana();
+                System.out.println("   📊 Ventana del árbol sintáctico abierta");
+
+                // Guardar como PostScript
+                visualizadorGrafico.guardarComoPS("output/ast_tree.ps");
+            } catch (Exception e) {
+                System.out.println("   ⚠️  No se pudo mostrar ventana gráfica (entorno sin GUI)");
+                System.out.println("   💡 Árbol en formato LISP mostrado arriba");
+            }
+            System.out.println();
+
             // Verificar si hay errores antes de continuar
             boolean hayErroresLexSin = errorListenerLexico.tieneErrores() || errorListenerSintactico.tieneErrores();
 
-            // ===== FASE 3: ANÁLISIS SEMÁNTICO =====
+            // ===== FASE 4: ANÁLISIS SEMÁNTICO =====
             SymbolTable tablaSimbolos = null;
             ReporteErrores reporte = null;
             GeneradorCodigoIntermedio generador = null;
             Optimizador optimizador = null;
 
             if (!hayErroresLexSin) {
-                System.out.println("═══ 3. ANÁLISIS SEMÁNTICO ═══");
+                System.out.println("═══ 4. ANÁLISIS SEMÁNTICO ═══");
 
                 // Resetear tabla de símbolos
                 SymbolTable.resetInstance();
@@ -145,7 +161,7 @@ public class App {
 
                 // ===== FASE 4: GENERACIÓN DE CÓDIGO INTERMEDIO =====
                 if (reporte.getCantidadErrores() == 0) {
-                    System.out.println("═══ 4. GENERACIÓN DE CÓDIGO INTERMEDIO ═══");
+                    System.out.println("═══ 5. GENERACIÓN DE CÓDIGO INTERMEDIO ═══");
 
                     generador = new GeneradorCodigoIntermedio();
                     generador.visit(tree);
@@ -169,7 +185,7 @@ public class App {
                     System.out.println();
 
                     // ===== FASE 5: OPTIMIZACIÓN DE CÓDIGO =====
-                    System.out.println("═══ 5. OPTIMIZACIÓN DE CÓDIGO ═══");
+                    System.out.println("═══ 6. OPTIMIZACIÓN DE CÓDIGO ═══");
 
                     optimizador = new Optimizador(generador.getInstrucciones());
                     optimizador.optimizar();

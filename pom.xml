@@ -27,6 +27,13 @@
             <version>${antlr.version}</version>
         </dependency>
 
+        <!-- ANTLR completo (para GUI y visualización) -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4</artifactId>
+            <version>${antlr.version}</version>
+        </dependency>
+
         <!-- JUnit para testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

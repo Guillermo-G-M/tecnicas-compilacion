@@ -51,6 +51,7 @@ El compilador genera automáticamente los siguientes archivos en el directorio `
 
 - **`codigo_intermedio.txt`**: Código de tres direcciones generado
 - **`codigo_optimizado.txt`**: Código optimizado tras aplicar técnicas de optimización
+- **`ast_tree.ps`**: Árbol sintáctico en formato PostScript
 
 ## 🎯 Fases del Compilador
 
@@ -58,9 +59,20 @@ El compilador ejecuta las siguientes fases en orden:
 
 1. **Análisis Léxico**: Tokenización del código fuente
 2. **Análisis Sintáctico**: Construcción del AST (formato LISP)
-3. **Análisis Semántico**: Verificación de tipos, tabla de símbolos
-4. **Generación de Código Intermedio**: Código de tres direcciones
-5. **Optimización**: Propagación de constantes, eliminación de código muerto
+3. **Visualización del AST**: Ventana gráfica interactiva del árbol sintáctico
+4. **Análisis Semántico**: Verificación de tipos, tabla de símbolos
+5. **Generación de Código Intermedio**: Código de tres direcciones
+6. **Optimización**: Propagación de constantes, eliminación de código muerto
+
+## 🖼️ Visualización Gráfica del AST
+
+El compilador abre automáticamente una ventana gráfica mostrando el árbol sintáctico completo.
+
+### Características:
+- ✅ **Ventana interactiva** con árbol completo expandido
+- ✅ **Controles de zoom**: Botones Zoom +, Zoom -, Reset
+- ✅ **Scroll horizontal y vertical** para navegar el árbol
+- ✅ **Exportación automática**: Se guarda en `output/ast_tree.ps` (PostScript)
 
 ## 📖 Documentación Técnica
 
