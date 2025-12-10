@@ -19,6 +19,7 @@ import com.compilador.tabla.SymbolTable;
 import com.compilador.generador.GeneradorCodigoIntermedio;
 import com.compilador.optimizador.Optimizador;
 import com.compilador.visualizador.VisualizadorGrafico;
+import com.compilador.utils.ColoresANSI;
 
 /**
  * Aplicación principal del compilador C++
@@ -67,10 +68,10 @@ public class App {
                 errorListenerLexico.imprimir();
             }
 
-            System.out.println("✅ Análisis léxico completado");
+            System.out.println(ColoresANSI.exito("✅ Análisis léxico completado"));
             System.out.println("   📊 Tokens procesados: " + tablaTokens.getCantidad());
             if (errorListenerLexico.tieneErrores()) {
-                System.out.println("   ❌ Errores léxicos: " + errorListenerLexico.getErrores().size());
+                System.out.println(ColoresANSI.error("   ❌ Errores léxicos: " + errorListenerLexico.getErrores().size()));
             }
             System.out.println();
 
@@ -98,10 +99,10 @@ public class App {
                 errorListenerSintactico.imprimir();
             }
 
-            System.out.println("✅ Análisis sintáctico completado");
+            System.out.println(ColoresANSI.exito("✅ Análisis sintáctico completado"));
             System.out.println("   📊 Nodos en AST: " + visualizador.contarNodos());
             if (errorListenerSintactico.tieneErrores()) {
-                System.out.println("   ❌ Errores sintácticos: " + errorListenerSintactico.getErrores().size());
+                System.out.println(ColoresANSI.error("   ❌ Errores sintácticos: " + errorListenerSintactico.getErrores().size()));
             }
             System.out.println();
 
@@ -115,7 +116,7 @@ public class App {
                 // Guardar como PostScript
                 visualizadorGrafico.guardarComoPS("output/ast_tree.ps");
             } catch (Exception e) {
-                System.out.println("   ⚠️  No se pudo mostrar ventana gráfica (entorno sin GUI)");
+                System.out.println(ColoresANSI.warning("   ⚠️  No se pudo mostrar ventana gráfica (entorno sin GUI)"));
                 System.out.println("   💡 Árbol en formato LISP mostrado arriba");
             }
             System.out.println();
@@ -149,7 +150,7 @@ public class App {
                 tablaSimbolos = analizador.getTablaSimbolos();
                 tablaSimbolos.imprimir();
 
-                System.out.println("✅ Análisis semántico completado");
+                System.out.println(ColoresANSI.exito("✅ Análisis semántico completado"));
                 System.out.println("   📊 Símbolos en tabla: " + tablaSimbolos.getCantidadSimbolos());
                 System.out.println("   📊 Contextos: " + tablaSimbolos.getCantidadContextos());
 
@@ -181,7 +182,7 @@ public class App {
                         System.err.println("⚠️  Error al guardar código intermedio: " + e.getMessage());
                     }
 
-                    System.out.println("✅ Código intermedio generado");
+                    System.out.println(ColoresANSI.exito("✅ Código intermedio generado"));
                     System.out.println();
 
                     // ===== FASE 5: OPTIMIZACIÓN DE CÓDIGO =====
@@ -199,14 +200,14 @@ public class App {
                         System.err.println("⚠️  Error al guardar código optimizado: " + e.getMessage());
                     }
 
-                    System.out.println("✅ Código optimizado");
+                    System.out.println(ColoresANSI.exito("✅ Código optimizado"));
                     System.out.println();
                 } else {
-                    System.out.println("⚠️  Generación de código omitida debido a errores semánticos");
+                    System.out.println(ColoresANSI.warning("⚠️  Generación de código omitida debido a errores semánticos"));
                     System.out.println();
                 }
             } else {
-                System.out.println("⚠️  Análisis semántico omitido debido a errores anteriores");
+                System.out.println(ColoresANSI.warning("⚠️  Análisis semántico omitido debido a errores anteriores"));
                 System.out.println();
             }
 
@@ -244,9 +245,9 @@ public class App {
             System.out.println();
 
             if (totalErrores == 0) {
-                System.out.println("🎉 ¡COMPILACIÓN EXITOSA!");
+                System.out.println(ColoresANSI.exitoNegrita("🎉 ¡COMPILACIÓN EXITOSA!"));
             } else {
-                System.out.println("❌ Compilación con errores");
+                System.out.println(ColoresANSI.errorNegrita("❌ Compilación con errores"));
             }
 
         } catch (Exception e) {
