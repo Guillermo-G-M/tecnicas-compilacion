@@ -254,13 +254,11 @@ public class SymbolTable {
 
     /**
      * Obtiene la cantidad total de símbolos
+     * Retorna el tamaño de todosLosSimbolos para incluir símbolos
+     * de contextos que ya fueron eliminados
      */
     public int getCantidadSimbolos() {
-        int total = 0;
-        for (Map<String, Id> contexto : contextos) {
-            total += contexto.size();
-        }
-        return total;
+        return todosLosSimbolos.size();
     }
 
     /**
