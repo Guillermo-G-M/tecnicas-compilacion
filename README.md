@@ -29,8 +29,14 @@ mvn clean test
 ### Ejecutar compilador con archivo de prueba
 
 #### Sintaxis general
+bash
 ```bash
 mvn -q exec:java -Dexec.args="<ruta_archivo>"
+```
+
+powershell
+```powershell
+mvn -q exec:java "-Dexec.args=<ruta_archivo>"
 ```
 
 #### Ejemplos con archivos de prueba incluidos
