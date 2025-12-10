@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * Visitor para generar código de tres direcciones a partir del AST
@@ -18,12 +19,27 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
     private int contadorTemporales;
     private int contadorEtiquetas;
     private String funcionActual;
+    private Stack<LoopLabels> loopStack;
+
+    /**
+     * Clase interna para mantener etiquetas de loops (para break/continue)
+     */
+    private static class LoopLabels {
+        String etiqContinue;  // Donde salta continue
+        String etiqBreak;     // Donde salta break
+
+        LoopLabels(String etiqContinue, String etiqBreak) {
+            this.etiqContinue = etiqContinue;
+            this.etiqBreak = etiqBreak;
+        }
+    }
 
     public GeneradorCodigoIntermedio() {
         this.instrucciones = new ArrayList<>();
         this.contadorTemporales = 0;
         this.contadorEtiquetas = 0;
         this.funcionActual = null;
+        this.loopStack = new Stack<>();
     }
 
     public List<String> getInstrucciones() {
@@ -91,6 +107,10 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
             return visit(ctx.for_i());
         } else if (ctx.return_i() != null) {
             return visit(ctx.return_i());
+        } else if (ctx.break_i() != null) {
+            return visit(ctx.break_i());
+        } else if (ctx.continue_i() != null) {
+            return visit(ctx.continue_i());
         } else if (ctx.bloque() != null) {
             return visit(ctx.bloque());
         } else if (ctx.call_f() != null) {
@@ -476,7 +496,10 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
         String condicion = visit(ctx.expresion());
         emitir("if !" + condicion + " goto " + etiqFin);
 
+        // Push etiquetas para break/continue (continue -> inicio, break -> fin)
+        loopStack.push(new LoopLabels(etiqInicio, etiqFin));
         visit(ctx.instruccion());
+        loopStack.pop();
 
         emitir("goto " + etiqInicio);
         emitir(etiqFin + ":");
@@ -485,22 +508,30 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
 
     @Override
     public String visitFor_i(CompiladorParser.For_iContext ctx) {
+        // Inicialización
         if (ctx.expresion_for(0) != null) {
             visit(ctx.expresion_for(0));
         }
 
         String etiqInicio = nuevaEtiqueta("FOR_START");
+        String etiqContinue = nuevaEtiqueta("FOR_CONTINUE");
         String etiqFin = nuevaEtiqueta("FOR_END");
 
         emitir(etiqInicio + ":");
 
+        // Condición
         if (ctx.expresion_for(1) != null) {
             String condicion = visit(ctx.expresion_for(1));
             emitir("if !" + condicion + " goto " + etiqFin);
         }
 
+        // Push etiquetas para break/continue (continue -> incremento, break -> fin)
+        loopStack.push(new LoopLabels(etiqContinue, etiqFin));
         visit(ctx.instruccion());
+        loopStack.pop();
 
+        // Incremento
+        emitir(etiqContinue + ":");
         if (ctx.expresion_for(2) != null) {
             visit(ctx.expresion_for(2));
         }
@@ -552,6 +583,24 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
             emitir("return " + valor);
         } else {
             emitir("return");
+        }
+        return null;
+    }
+
+    @Override
+    public String visitBreak_i(CompiladorParser.Break_iContext ctx) {
+        if (!loopStack.isEmpty()) {
+            LoopLabels labels = loopStack.peek();
+            emitir("goto " + labels.etiqBreak);
+        }
+        return null;
+    }
+
+    @Override
+    public String visitContinue_i(CompiladorParser.Continue_iContext ctx) {
+        if (!loopStack.isEmpty()) {
+            LoopLabels labels = loopStack.peek();
+            emitir("goto " + labels.etiqContinue);
         }
         return null;
     }

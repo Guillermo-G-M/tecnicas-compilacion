@@ -24,6 +24,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
     private String contextoActual;
     private int contadorContextos;
     private Function funcionActual;
+    private int nivelLoop; // Contador de loops anidados para validar break/continue
 
     public AnalizadorSemantico() {
         this.tablaSimbolos = SymbolTable.getInstance();
@@ -31,6 +32,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
         this.contextoActual = "global";
         this.contadorContextos = 0;
         this.funcionActual = null;
+        this.nivelLoop = 0;
 
         // Inicializar contexto global
         tablaSimbolos.agregarContexto("global");
@@ -312,6 +314,52 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
                     var.getLinea(), var.getColumna()
                 );
             }
+        }
+    }
+
+    // ========== CONTROL DE FLUJO: LOOPS ==========
+
+    @Override
+    public void enterWhile_i(CompiladorParser.While_iContext ctx) {
+        nivelLoop++;
+    }
+
+    @Override
+    public void exitWhile_i(CompiladorParser.While_iContext ctx) {
+        nivelLoop--;
+    }
+
+    @Override
+    public void enterFor_i(CompiladorParser.For_iContext ctx) {
+        nivelLoop++;
+    }
+
+    @Override
+    public void exitFor_i(CompiladorParser.For_iContext ctx) {
+        nivelLoop--;
+    }
+
+    // ========== CONTROL DE FLUJO: BREAK Y CONTINUE ==========
+
+    @Override
+    public void enterBreak_i(CompiladorParser.Break_iContext ctx) {
+        if (nivelLoop == 0) {
+            reporte.agregarError(
+                "'break' solo puede usarse dentro de un bucle",
+                ctx.start.getLine(),
+                ctx.start.getCharPositionInLine()
+            );
+        }
+    }
+
+    @Override
+    public void enterContinue_i(CompiladorParser.Continue_iContext ctx) {
+        if (nivelLoop == 0) {
+            reporte.agregarError(
+                "'continue' solo puede usarse dentro de un bucle",
+                ctx.start.getLine(),
+                ctx.start.getCharPositionInLine()
+            );
         }
     }
 
