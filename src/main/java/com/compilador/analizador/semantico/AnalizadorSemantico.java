@@ -22,7 +22,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
     private SymbolTable tablaSimbolos;
     private ReporteErrores reporte;
     private String contextoActual;
-    private int contadorContextos;
+    private int contadorContextos; // Cuenta total de contextos creados durante el análisis
     private Function funcionActual;
     private int nivelLoop; // Contador de loops anidados para validar break/continue
 
@@ -30,7 +30,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
         this.tablaSimbolos = SymbolTable.getInstance();
         this.reporte = new ReporteErrores();
         this.contextoActual = "global";
-        this.contadorContextos = 0;
+        this.contadorContextos = 1; // 1 por el contexto global
         this.funcionActual = null;
         this.nivelLoop = 0;
 
@@ -44,6 +44,10 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
 
     public ReporteErrores getReporte() {
         return reporte;
+    }
+
+    public int getTotalContextosCreados() {
+        return contadorContextos;
     }
 
     // ========== GESTION DE AMBITOS ==========
@@ -149,6 +153,7 @@ public class AnalizadorSemantico extends CompiladorBaseListener {
             String nombreContexto = funcionActual.getNombre();
             tablaSimbolos.agregarContexto(nombreContexto);
             contextoActual = nombreContexto;
+            contadorContextos++; // Incrementar contador de contextos creados
 
             // Agregar parámetros al contexto de la función
             for (Variable param : funcionActual.getParametros()) {

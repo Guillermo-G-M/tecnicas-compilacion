@@ -152,7 +152,7 @@ public class App {
 
                 System.out.println(ColoresANSI.exito("✅ Análisis semántico completado"));
                 System.out.println("   📊 Símbolos en tabla: " + tablaSimbolos.getCantidadSimbolos());
-                System.out.println("   📊 Contextos: " + tablaSimbolos.getCantidadContextos());
+                System.out.println("   📊 Contextos procesados: " + analizador.getTotalContextosCreados());
 
                 // Mostrar reporte de errores/warnings
                 reporte = analizador.getReporte();
