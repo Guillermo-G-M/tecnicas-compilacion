@@ -74,11 +74,32 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
         emitir("// Código de tres direcciones generado");
         emitir("PROGRAMA_INICIO:");
 
-        if (ctx.instrucciones() != null) {
-            visit(ctx.instrucciones());
+        if (ctx.instrucciones_globales() != null) {
+            visit(ctx.instrucciones_globales());
         }
 
         emitir("PROGRAMA_FIN:");
+        return null;
+    }
+
+    @Override
+    public String visitInstrucciones_globales(CompiladorParser.Instrucciones_globalesContext ctx) {
+        if (ctx.instruccion_global() != null) {
+            visit(ctx.instruccion_global());
+        }
+        if (ctx.instrucciones_globales() != null) {
+            visit(ctx.instrucciones_globales());
+        }
+        return null;
+    }
+
+    @Override
+    public String visitInstruccion_global(CompiladorParser.Instruccion_globalContext ctx) {
+        if (ctx.declaracion() != null) {
+            return visit(ctx.declaracion());
+        } else if (ctx.asignacion() != null) {
+            return visit(ctx.asignacion());
+        }
         return null;
     }
 

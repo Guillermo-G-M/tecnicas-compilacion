@@ -82,7 +82,15 @@ COMMENT_BLOCK : '/*' .*? '*/' -> skip ;
 
 // ===== REGLAS GRAMATICALES =====
 
-programa : instrucciones EOF ;
+programa : instrucciones_globales EOF ;
+
+instrucciones_globales : instruccion_global instrucciones_globales
+                       |
+                       ;
+
+instruccion_global : declaracion
+                   | asignacion
+                   ;
 
 instrucciones : instruccion instrucciones
               |
