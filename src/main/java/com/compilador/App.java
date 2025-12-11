@@ -63,6 +63,20 @@ public class App {
             TablaTokens tablaTokens = new TablaTokens(tokens.getTokens(), lexer.getVocabulary());
             tablaTokens.imprimir();
 
+            // Crear directorio output si no existe
+            File outputDir = new File("output");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+
+            // Guardar tabla de tokens en archivo
+            try {
+                tablaTokens.guardarArchivo("output/tokens.txt");
+                System.out.println("📄 Tabla de tokens guardada en: output/tokens.txt");
+            } catch (Exception e) {
+                System.err.println("⚠️  Error al guardar tokens: " + e.getMessage());
+            }
+
             // Imprimir errores léxicos si existen
             if (errorListenerLexico.tieneErrores()) {
                 errorListenerLexico.imprimir();
@@ -93,6 +107,14 @@ public class App {
             // Visualizar AST
             VisualizadorAST visualizador = new VisualizadorAST(tree, parser);
             visualizador.imprimirArbolLisp();
+
+            // Guardar AST en archivo
+            try {
+                visualizador.guardarArchivo("output/ast.txt");
+                System.out.println("📄 AST guardado en: output/ast.txt");
+            } catch (Exception e) {
+                System.err.println("⚠️  Error al guardar AST: " + e.getMessage());
+            }
 
             // Imprimir errores sintácticos si existen
             if (errorListenerSintactico.tieneErrores()) {
@@ -150,6 +172,14 @@ public class App {
                 tablaSimbolos = analizador.getTablaSimbolos();
                 tablaSimbolos.imprimir();
 
+                // Guardar tabla de símbolos en archivo
+                try {
+                    tablaSimbolos.guardarArchivo("output/tabla_simbolos.txt");
+                    System.out.println("📄 Tabla de símbolos guardada en: output/tabla_simbolos.txt");
+                } catch (Exception e) {
+                    System.err.println("⚠️  Error al guardar tabla de símbolos: " + e.getMessage());
+                }
+
                 System.out.println(ColoresANSI.exito("✅ Análisis semántico completado"));
                 System.out.println("   📊 Símbolos en tabla: " + tablaSimbolos.getCantidadSimbolos());
                 System.out.println("   📊 Contextos procesados: " + analizador.getTotalContextosCreados());
@@ -157,6 +187,14 @@ public class App {
                 // Mostrar reporte de errores/warnings
                 reporte = analizador.getReporte();
                 reporte.imprimir();
+
+                // Guardar reporte en archivo
+                try {
+                    reporte.guardarArchivo("output/reporte_semantico.txt");
+                    System.out.println("📄 Reporte semántico guardado en: output/reporte_semantico.txt");
+                } catch (Exception e) {
+                    System.err.println("⚠️  Error al guardar reporte: " + e.getMessage());
+                }
 
                 System.out.println();
 
@@ -167,12 +205,6 @@ public class App {
                     generador = new GeneradorCodigoIntermedio();
                     generador.visit(tree);
                     generador.imprimir();
-
-                    // Crear directorio output si no existe
-                    File outputDir = new File("output");
-                    if (!outputDir.exists()) {
-                        outputDir.mkdirs();
-                    }
 
                     // Guardar código intermedio en archivo
                     try {

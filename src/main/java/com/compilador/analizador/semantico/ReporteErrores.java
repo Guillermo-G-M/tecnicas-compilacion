@@ -1,5 +1,8 @@
 package com.compilador.analizador.semantico;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -186,5 +189,73 @@ public class ReporteErrores {
 
     public List<Mensaje> getMensajes() {
         return mensajes;
+    }
+
+    /**
+     * Guarda el reporte de errores y warnings en un archivo
+     * @param rutaArchivo Ruta del archivo de salida
+     * @throws IOException Si hay error al escribir el archivo
+     */
+    public void guardarArchivo(String rutaArchivo) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            writer.println("=== REPORTE DE ANÁLISIS SEMÁNTICO ===");
+            writer.println();
+
+            if (mensajes.isEmpty()) {
+                writer.println("✓ Sin errores ni warnings");
+                return;
+            }
+
+            // Separar por tipo
+            List<Mensaje> errores = new ArrayList<>();
+            List<Mensaje> warnings = new ArrayList<>();
+            List<Mensaje> infos = new ArrayList<>();
+
+            for (Mensaje m : mensajes) {
+                switch (m.getTipo()) {
+                    case ERROR:
+                        errores.add(m);
+                        break;
+                    case WARNING:
+                        warnings.add(m);
+                        break;
+                    case INFO:
+                        infos.add(m);
+                        break;
+                }
+            }
+
+            // Escribir errores
+            if (!errores.isEmpty()) {
+                writer.println("❌ ERRORES (" + errores.size() + "):");
+                for (Mensaje error : errores) {
+                    writer.printf("   [Línea %d:%d] %s%n",
+                        error.getLinea(), error.getColumna(), error.getDescripcion());
+                }
+                writer.println();
+            }
+
+            // Escribir warnings
+            if (!warnings.isEmpty()) {
+                writer.println("⚠️  WARNINGS (" + warnings.size() + "):");
+                for (Mensaje warning : warnings) {
+                    writer.printf("   [Línea %d:%d] %s%n",
+                        warning.getLinea(), warning.getColumna(), warning.getDescripcion());
+                }
+                writer.println();
+            }
+
+            // Escribir info
+            if (!infos.isEmpty()) {
+                writer.println("ℹ️  INFORMACIÓN (" + infos.size() + "):");
+                for (Mensaje info : infos) {
+                    writer.printf("   [Línea %d:%d] %s%n",
+                        info.getLinea(), info.getColumna(), info.getDescripcion());
+                }
+                writer.println();
+            }
+
+            writer.println("Resumen: " + errores.size() + " errores, " + warnings.size() + " warnings");
+        }
     }
 }

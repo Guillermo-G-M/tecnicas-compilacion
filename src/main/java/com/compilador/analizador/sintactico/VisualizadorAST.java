@@ -4,6 +4,10 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 /**
  * Visualizador del árbol sintáctico abstracto (AST)
  */
@@ -69,5 +73,21 @@ public class VisualizadorAST {
             count += contarNodosRecursivo(node.getChild(i));
         }
         return count;
+    }
+
+    /**
+     * Guarda el AST en formato LISP en un archivo
+     * @param rutaArchivo Ruta del archivo de salida
+     * @throws IOException Si hay error al escribir el archivo
+     */
+    public void guardarArchivo(String rutaArchivo) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            writer.println("=== ÁRBOL SINTÁCTICO (FORMATO LISP) ===");
+            writer.println();
+            String arbol = Trees.toStringTree(tree, parser);
+            writer.println(arbol);
+            writer.println();
+            writer.println("Total nodos: " + contarNodos());
+        }
     }
 }

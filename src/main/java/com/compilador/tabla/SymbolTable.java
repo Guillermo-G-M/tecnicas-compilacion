@@ -1,5 +1,8 @@
 package com.compilador.tabla;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -274,5 +277,73 @@ public class SymbolTable {
 
     public List<String> getNombresContextos() {
         return nombresContextos;
+    }
+
+    /**
+     * Guarda la tabla de símbolos en un archivo
+     * @param rutaArchivo Ruta del archivo de salida
+     * @throws IOException Si hay error al escribir el archivo
+     */
+    public void guardarArchivo(String rutaArchivo) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(rutaArchivo))) {
+            writer.println("=== TABLA DE SÍMBOLOS ===");
+            writer.println();
+
+            if (todosLosSimbolos.isEmpty()) {
+                writer.println("(vacía)");
+                return;
+            }
+
+            writer.printf("%-18s %-10s %-12s %-8s %-10s %-15s %-20s%n",
+                         "NOMBRE", "TIPO", "CATEGORÍA", "LÍNEA", "COLUMNA", "ÁMBITO", "DETALLES");
+            writer.println("─".repeat(100));
+
+            for (RegistroSimbolo registro : todosLosSimbolos) {
+                Id simbolo = registro.simbolo;
+                String ambito = registro.contexto;
+
+                String categoria;
+                String detalles = "[private]";
+
+                if (simbolo instanceof Variable) {
+                    Variable var = (Variable) simbolo;
+                    categoria = var.isParametro() ? "parametro" : "variable";
+
+                    if (var.isEsArray()) {
+                        detalles = "[arr:" + var.getsizeArray() + "] [private]";
+                    }
+                } else if (simbolo instanceof Function) {
+                    categoria = "funcion";
+                    Function func = (Function) simbolo;
+
+                    StringBuilder paramsList = new StringBuilder("[private]");
+                    if (!func.getParametros().isEmpty()) {
+                        paramsList.append(" [");
+                        for (int i = 0; i < func.getParametros().size(); i++) {
+                            paramsList.append(func.getParametros().get(i).getTipoDato());
+                            if (i < func.getParametros().size() - 1) {
+                                paramsList.append(", ");
+                            }
+                        }
+                        paramsList.append("]");
+                    }
+                    detalles = paramsList.toString();
+                } else {
+                    categoria = "desconocido";
+                }
+
+                writer.printf("%-18s %-10s %-12s %-8d %-10d %-15s %-20s%n",
+                             simbolo.getNombre(),
+                             simbolo.getTipoDato(),
+                             categoria,
+                             simbolo.getLinea(),
+                             simbolo.getColumna(),
+                             ambito,
+                             detalles);
+            }
+
+            writer.println();
+            writer.println("Total símbolos: " + todosLosSimbolos.size());
+        }
     }
 }
