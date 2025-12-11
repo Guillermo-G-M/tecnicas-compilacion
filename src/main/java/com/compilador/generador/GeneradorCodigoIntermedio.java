@@ -20,6 +20,7 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
     private int contadorEtiquetas;
     private String funcionActual;
     private Stack<LoopLabels> loopStack;
+    private boolean comentarioGlobalesEmitido;
 
     /**
      * Clase interna para mantener etiquetas de loops (para break/continue)
@@ -40,6 +41,7 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
         this.contadorEtiquetas = 0;
         this.funcionActual = null;
         this.loopStack = new Stack<>();
+        this.comentarioGlobalesEmitido = false;
     }
 
     public List<String> getInstrucciones() {
@@ -148,8 +150,9 @@ public class GeneradorCodigoIntermedio extends CompiladorBaseVisitor<String> {
         String nombre = ctx.ID().getText();
 
         if (ctx.dec_types().dec_var() != null) {
-            if (funcionActual == null) {
+            if (funcionActual == null && !comentarioGlobalesEmitido) {
                 emitir("// Declaración de variables globales");
+                comentarioGlobalesEmitido = true;
             }
             emitir("DECLARE " + nombre + " " + tipo);
 

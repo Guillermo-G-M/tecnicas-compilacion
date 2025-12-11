@@ -26,12 +26,18 @@ public class Optimizador {
     private List<String> instruccionesOptimizadas;
     private int instruccionesEliminadas;
     private Map<String, String> constantesPropagadas;
+    private List<String> detallesEliminaciones;
+    private List<String> detallesPropagaciones;
+    private List<String> detallesSimplificaciones;
 
     public Optimizador(List<String> instrucciones) {
         this.instruccionesOriginales = new ArrayList<>(instrucciones);
         this.instruccionesOptimizadas = new ArrayList<>(instrucciones);
         this.instruccionesEliminadas = 0;
         this.constantesPropagadas = new HashMap<>();
+        this.detallesEliminaciones = new ArrayList<>();
+        this.detallesPropagaciones = new ArrayList<>();
+        this.detallesSimplificaciones = new ArrayList<>();
     }
 
     /**
@@ -50,6 +56,7 @@ public class Optimizador {
             simplificacionExpresiones();
             eliminacionRedundancias();
             eliminacionCodigoMuerto();
+            eliminacionVariablesNoUsadas();
 
             if (instruccionesOptimizadas.size() < tamañoAnterior) {
                 cambios = true;
@@ -86,12 +93,19 @@ public class Optimizador {
             }
 
             // Reemplazar uso de temporales con constantes
+            String instrOriginal = instrOptimizada;
             for (Map.Entry<String, String> entry : constantes.entrySet()) {
                 String temp = entry.getKey();
                 String valor = entry.getValue();
 
                 // Reemplazar en expresiones: t1 + t2 -> t1 + 5
                 instrOptimizada = instrOptimizada.replaceAll("\\b" + temp + "\\b", valor);
+            }
+
+            // Registrar si hubo propagación
+            if (!instrOptimizada.equals(instrOriginal)) {
+                detallesPropagaciones.add(String.format("  %s → %s",
+                    instrOriginal.trim(), instrOptimizada.trim()));
             }
 
             // Si la instrucción cambió, invalidar temporales que usan esta variable
@@ -158,6 +172,12 @@ public class Optimizador {
                 } else {
                     instrOptimizada = variable + " = " + resultado_calc;
                 }
+
+                // Registrar simplificación
+                if (!instrOptimizada.equals(instr.trim())) {
+                    detallesSimplificaciones.add(String.format("  %s → %s",
+                        instr.trim(), instrOptimizada));
+                }
             }
 
             // Detectar comparaciones con constantes: t1 = 5 > 3
@@ -181,6 +201,12 @@ public class Optimizador {
                 }
 
                 instrOptimizada = variable + " = " + (resultado_bool ? "1" : "0");
+
+                // Registrar simplificación
+                if (!instrOptimizada.equals(instr.trim())) {
+                    detallesSimplificaciones.add(String.format("  %s → %s",
+                        instr.trim(), instrOptimizada));
+                }
             }
 
             resultado.add(instrOptimizada);
@@ -196,6 +222,7 @@ public class Optimizador {
     private void eliminacionCodigoMuerto() {
         List<String> resultado = new ArrayList<>();
         boolean enCodigoMuerto = false;
+        int lineaActual = 0;
 
         for (String instr : instruccionesOptimizadas) {
             String instrTrim = instr.trim();
@@ -203,12 +230,14 @@ public class Optimizador {
             // Detectar goto incondicional o return
             if (instrTrim.startsWith("goto ") && !instrTrim.startsWith("goto END_IF")) {
                 resultado.add(instr);
+                lineaActual++;
                 enCodigoMuerto = true;
                 continue;
             }
 
             if (instrTrim.startsWith("return")) {
                 resultado.add(instr);
+                lineaActual++;
                 enCodigoMuerto = true;
                 continue;
             }
@@ -217,12 +246,18 @@ public class Optimizador {
             if (instrTrim.matches("^\\w+:$")) {
                 enCodigoMuerto = false;
                 resultado.add(instr);
+                lineaActual++;
                 continue;
             }
 
             // Si no estamos en código muerto, agregar instrucción
             if (!enCodigoMuerto) {
                 resultado.add(instr);
+                lineaActual++;
+            } else {
+                // Registrar código muerto eliminado
+                detallesEliminaciones.add(String.format("  Línea %d: Código muerto: %s", lineaActual, instrTrim));
+                lineaActual++;
             }
         }
 
@@ -236,6 +271,7 @@ public class Optimizador {
     private void eliminacionRedundancias() {
         List<String> resultado = new ArrayList<>();
         Set<String> instruccionesVistas = new HashSet<>();
+        int lineaActual = 0;
 
         for (String instr : instruccionesOptimizadas) {
             String instrTrim = instr.trim();
@@ -244,6 +280,8 @@ public class Optimizador {
             Pattern patternAutoAsign = Pattern.compile("^(\\w+)\\s*=\\s*\\1$");
             Matcher matcherAutoAsign = patternAutoAsign.matcher(instrTrim);
             if (matcherAutoAsign.matches()) {
+                detallesEliminaciones.add(String.format("  Línea %d: Asignación inútil: %s", lineaActual, instrTrim));
+                lineaActual++;
                 continue; // Saltar esta instrucción
             }
 
@@ -255,6 +293,8 @@ public class Optimizador {
                 !instrTrim.startsWith("PROGRAMA_")) {
 
                 if (instruccionesVistas.contains(instrTrim)) {
+                    detallesEliminaciones.add(String.format("  Línea %d: Duplicado: %s", lineaActual, instrTrim));
+                    lineaActual++;
                     continue; // Saltar duplicado
                 }
                 instruccionesVistas.add(instrTrim);
@@ -266,6 +306,71 @@ public class Optimizador {
             }
 
             resultado.add(instr);
+            lineaActual++;
+        }
+
+        instruccionesOptimizadas = resultado;
+    }
+
+    /**
+     * Optimización 5: Eliminación de variables no usadas
+     * Elimina declaraciones de variables que nunca se usan
+     */
+    private void eliminacionVariablesNoUsadas() {
+        List<String> resultado = new ArrayList<>();
+        Set<String> variablesDeclaradas = new HashSet<>();
+        Set<String> variablesUsadas = new HashSet<>();
+
+        // Primera pasada: identificar todas las variables declaradas y usadas
+        for (String instr : instruccionesOptimizadas) {
+            String instrTrim = instr.trim();
+
+            // Detectar declaraciones: DECLARE nombre tipo
+            if (instrTrim.startsWith("DECLARE ")) {
+                String[] partes = instrTrim.split("\\s+");
+                if (partes.length >= 2) {
+                    String varNombre = partes[1];
+                    // Si es array, extraer nombre sin []
+                    if (varNombre.contains("[")) {
+                        varNombre = varNombre.substring(0, varNombre.indexOf('['));
+                    }
+                    variablesDeclaradas.add(varNombre);
+                }
+            } else {
+                // Buscar uso de variables en otras instrucciones
+                for (String var : variablesDeclaradas) {
+                    if (instrTrim.contains(var)) {
+                        variablesUsadas.add(var);
+                    }
+                }
+            }
+        }
+
+        // Segunda pasada: eliminar declaraciones no usadas
+        int lineaActual = 0;
+        for (String instr : instruccionesOptimizadas) {
+            String instrTrim = instr.trim();
+
+            if (instrTrim.startsWith("DECLARE ")) {
+                String[] partes = instrTrim.split("\\s+");
+                if (partes.length >= 2) {
+                    String varNombre = partes[1];
+                    // Si es array, extraer nombre sin []
+                    if (varNombre.contains("[")) {
+                        varNombre = varNombre.substring(0, varNombre.indexOf('['));
+                    }
+
+                    // Si no se usa, omitir
+                    if (!variablesUsadas.contains(varNombre)) {
+                        detallesEliminaciones.add(String.format("  Línea %d: Variable no usada: %s", lineaActual, instrTrim));
+                        lineaActual++;
+                        continue;
+                    }
+                }
+            }
+
+            resultado.add(instr);
+            lineaActual++;
         }
 
         instruccionesOptimizadas = resultado;
@@ -345,6 +450,33 @@ public class Optimizador {
         System.out.println("Constantes propagadas:        " + getCantidadConstantesPropagadas());
         System.out.printf("Reducción:                    %.2f%%\n", getPorcentajeReduccion());
         System.out.println();
+
+        // Detalles de eliminaciones
+        if (!detallesEliminaciones.isEmpty()) {
+            System.out.println("=== INSTRUCCIONES ELIMINADAS ===");
+            for (String detalle : detallesEliminaciones) {
+                System.out.println(detalle);
+            }
+            System.out.println();
+        }
+
+        // Detalles de propagaciones
+        if (!detallesPropagaciones.isEmpty()) {
+            System.out.println("=== PROPAGACIONES DE CONSTANTES ===");
+            for (String detalle : detallesPropagaciones) {
+                System.out.println(detalle);
+            }
+            System.out.println();
+        }
+
+        // Detalles de simplificaciones
+        if (!detallesSimplificaciones.isEmpty()) {
+            System.out.println("=== SIMPLIFICACIONES ===");
+            for (String detalle : detallesSimplificaciones) {
+                System.out.println(detalle);
+            }
+            System.out.println();
+        }
     }
 
     /**
@@ -366,6 +498,34 @@ public class Optimizador {
             writer.println("Instrucciones eliminadas:     " + getInstruccionesEliminadas());
             writer.println("Constantes propagadas:        " + getCantidadConstantesPropagadas());
             writer.printf("Reducción:                    %.2f%%\n", getPorcentajeReduccion());
+            writer.println();
+
+            // Detalles de eliminaciones
+            if (!detallesEliminaciones.isEmpty()) {
+                writer.println("=== INSTRUCCIONES ELIMINADAS ===");
+                for (String detalle : detallesEliminaciones) {
+                    writer.println(detalle);
+                }
+                writer.println();
+            }
+
+            // Detalles de propagaciones
+            if (!detallesPropagaciones.isEmpty()) {
+                writer.println("=== PROPAGACIONES DE CONSTANTES ===");
+                for (String detalle : detallesPropagaciones) {
+                    writer.println(detalle);
+                }
+                writer.println();
+            }
+
+            // Detalles de simplificaciones
+            if (!detallesSimplificaciones.isEmpty()) {
+                writer.println("=== SIMPLIFICACIONES ===");
+                for (String detalle : detallesSimplificaciones) {
+                    writer.println(detalle);
+                }
+                writer.println();
+            }
         }
     }
 }
